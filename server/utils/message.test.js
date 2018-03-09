@@ -10,7 +10,7 @@ describe('generateMessage', () => {
 
         expect(message.from).toBe(from);
         expect(message.text).toBe(text);
-        expect(typeof message.created_at.getMonth).toBe('function');
+        expect(typeof message.created_at).toBe('number');
     });
 
     

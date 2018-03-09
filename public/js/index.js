@@ -1,5 +1,22 @@
 var socket = io();
 
+function scrollToBottom() {
+    // selectors
+    var messages = $('#messages');
+    var newMessage = messages.children('li:last-child');
+
+    // heights
+    var clientHeight = messages.prop('clientHeight');
+    var scrollTop = messages.prop('scrollTop');
+    var scrollHeight = messages.prop('scrollHeight');
+    var newMessageHeight = newMessage.innerHeight();
+    var lastMessageHeight = newMessage.prev().innerHeight();
+
+    if (clientHeight + scrollTop + newMessageHeight + lastMessageHeight >= scrollHeight) {
+        messages.scrollTop(scrollHeight);
+    }
+}
+
 socket.on('connect', function() {
     console.log('Connected to server');
 });
@@ -9,18 +26,35 @@ socket.on('disconnect', function() {
 });
 
 socket.on('newMessage', function(message) {
-    var li = $('<li></li>');
-    li.text(`${message.from}: ${message.text}`);
-    $('#messages').append(li);
+    var formattedTime = moment(message.created_at).format('h:mm a');
+    
+    // template setup
+    var template = $('#message-template').html();
+    var html = Mustache.render(template, {
+        text: message.text,
+        from: message.from,
+        created_at: formattedTime
+    });
+
+    $('#messages').append(html);
+    
+    scrollToBottom();
 });
 
 socket.on('newLocationMessage', function(message) {
-    var li = $('<li></li>');
-    var a = $(`<a target="_blank">My Current Location</a>`);
-    li.text(`${message.from}: `);
-    a.attr('href', message.url);
-    li.append(a);
-    $('#messages').append(li);
+    var formattedTime = moment(message.created_at).format('h:mm a');
+    
+    // template setup
+    var template = $('#location-message-template').html();
+    var html = Mustache.render(template, {
+        url: message.url,
+        from: message.from,
+        created_at: formattedTime
+    });
+
+    $('#messages').append(html);
+
+    scrollToBottom();
 });
 
 $('#message-form').on('submit', function(e) {
@@ -32,7 +66,6 @@ $('#message-form').on('submit', function(e) {
         text: messageInput.val()
     }, function(response) {
         messageInput.val('');
-        console.log(response);
     });
 });
 
